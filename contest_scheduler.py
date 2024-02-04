@@ -33,7 +33,7 @@ def mex(s):
         m += 1
     return m
 
-def color(g):
+def color(g, constraints):
     maxdegree = max(dict(g.degree).values())
     lists = list(random.sample(colors, maxdegree))
     blacklisted = set()
@@ -59,7 +59,13 @@ def color(g):
         if len(k) == 0:
             g.nodes[i]['color'] = colorx[0]
         else:
-            g.nodes[i]['color'] = mex(set(k))
+            available_colors = set(colorx) - set(k)
+            for constraint in constraints:
+                if i == constraint[0] and g.nodes[constraint[1]]['color'] in available_colors:
+                    available_colors.remove(g.nodes[constraint[1]]['color'])
+                elif i == constraint[1] and g.nodes[constraint[0]]['color'] in available_colors:
+                    available_colors.remove(g.nodes[constraint[0]]['color'])
+            g.nodes[i]['color'] = min(available_colors) if available_colors else mex(set(k))
 
 def distinctColors(g):
     colors = set()
@@ -82,6 +88,7 @@ for i in range(number_of_constraints):
     my_tuple[1] = list(d.values()).index(my_tuple[1])
     mytuple = tuple(my_tuple)
     constraint.append(mytuple)
+    random_list.append(mytuple)
 
 while i < 10:
     X = np.random.randint(0, len(vertices_list), size=2)
@@ -96,7 +103,7 @@ while i < 10:
 G.add_nodes_from(vertices_list)
 G.add_edges_from(random_list)
 
-color(G)
+color(G, constraint)
 print("\nNumber of slots required to conduct the contest:", distinctColors(G))
 
 colors_nodes = [colors[data['color']] for v, data in G.nodes(data=True)]
